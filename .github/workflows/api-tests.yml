@@ -1,0 +1,45 @@
+name: API Regression Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:  # allows manually triggering from the Actions tab
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run smoke tests
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          API_TEST_USERNAME: ${{ secrets.API_TEST_USERNAME }}
+          API_TEST_PASSWORD: ${{ secrets.API_TEST_PASSWORD }}
+        run: pytest -m smoke
+
+      - name: Run full regression suite
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          API_TEST_USERNAME: ${{ secrets.API_TEST_USERNAME }}
+          API_TEST_PASSWORD: ${{ secrets.API_TEST_PASSWORD }}
+        run: pytest -m regression
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: report.html

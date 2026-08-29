@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "integer" },
+    "userId": { "type": "integer" },
+    "title": { "type": "string" },
+    "body": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["id", "userId", "title"],
+  "additionalProperties": true
+}
