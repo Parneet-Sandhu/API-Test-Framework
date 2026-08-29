@@ -26,11 +26,20 @@ from utils.api_client import APIClient
 load_dotenv()
 
 
+DEFAULT_BASE_URL = "https://dummyjson.com"
+
+
+def _get_base_url():
+    """Reads API_BASE_URL, falling back to the default if it's
+    missing OR set to an empty string (os.getenv's default arg only
+    covers the missing case, not an empty-but-present env var)."""
+    return os.getenv("API_BASE_URL") or DEFAULT_BASE_URL
+
+
 @pytest.fixture(scope="session")
 def api_client():
     """Unauthenticated client — used for public/open endpoints."""
-    base_url = os.getenv("API_BASE_URL", "https://dummyjson.com")
-    return APIClient(base_url, headers={"Content-Type": "application/json"})
+    return APIClient(_get_base_url(), headers={"Content-Type": "application/json"})
 
 
 @pytest.fixture(scope="session")
@@ -42,8 +51,8 @@ def auth_token(api_client):
     call), and every test that needs auth can just reuse this same token
     instead of logging in again.
     """
-    username = os.getenv("API_TEST_USERNAME", "emilys")
-    password = os.getenv("API_TEST_PASSWORD", "emilyspass")
+    username = os.getenv("API_TEST_USERNAME") or "emilys"
+    password = os.getenv("API_TEST_PASSWORD") or "emilyspass"
 
     response = api_client.post(
         "/auth/login",
@@ -62,12 +71,11 @@ def auth_token(api_client):
 @pytest.fixture(scope="session")
 def authenticated_client(auth_token):
     """Client pre-loaded with a real Bearer token from the login fixture."""
-    base_url = os.getenv("API_BASE_URL", "https://dummyjson.com")
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {auth_token}",
     }
-    return APIClient(base_url, headers=headers)
+    return APIClient(_get_base_url(), headers=headers)
 
 
 @pytest.fixture
