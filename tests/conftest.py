@@ -32,8 +32,14 @@ DEFAULT_BASE_URL = "https://dummyjson.com"
 def _get_base_url():
     """Reads API_BASE_URL, falling back to the default if it's
     missing OR set to an empty string (os.getenv's default arg only
-    covers the missing case, not an empty-but-present env var)."""
-    return os.getenv("API_BASE_URL") or DEFAULT_BASE_URL
+    covers the missing case, not an empty-but-present env var).
+
+    Also strips whitespace/newlines — a trailing newline in a GitHub
+    secret (e.g. from a copy-paste) silently breaks DNS resolution
+    with a cryptic 'Name or service not known' error otherwise.
+    """
+    value = os.getenv("API_BASE_URL", "").strip()
+    return value or DEFAULT_BASE_URL
 
 
 @pytest.fixture(scope="session")
@@ -51,8 +57,8 @@ def auth_token(api_client):
     call), and every test that needs auth can just reuse this same token
     instead of logging in again.
     """
-    username = os.getenv("API_TEST_USERNAME") or "emilys"
-    password = os.getenv("API_TEST_PASSWORD") or "emilyspass"
+    username = (os.getenv("API_TEST_USERNAME") or "emilys").strip()
+    password = (os.getenv("API_TEST_PASSWORD") or "emilyspass").strip()
 
     response = api_client.post(
         "/auth/login",
